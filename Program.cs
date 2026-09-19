@@ -83,15 +83,30 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 // Refuse to start in production with the sample staff password.
+// Refuse to start outside Development unless real staff credentials were supplied.
 if (!app.Environment.IsDevelopment())
 {
     var staff = app.Configuration.GetSection("Staff").Get<StaffOptions>() ?? new StaffOptions();
-    if (staff.Users.Count == 0 || staff.Users.Any(u => u.Password == "ChangeMe!123"))
-        throw new InvalidOperationException(
-            "Configure real staff credentials (Staff:Users) before running outside Development. " +
-            "Use environment variables or a secret store, not appsettings.json.");
-}
+    const string sample = "ChangeMe!123";
 
+    var problems = new List<string>();
+    if (staff.Users.Count == 0)
+        problems.Add("no staff user is configured");
+    for (var i = 0; i < staff.Users.Count; i++)
+    {
+        var u = staff.Users[i];
+        if (string.IsNullOrWhiteSpace(u.Username))
+            problems.Add($"Staff__Users__{i}__Username is empty");
+        if (string.IsNullOrEmpty(u.Password) || u.Password == sample || u.Password.Length < 10)
+            problems.Add($"Staff__Users__{i}__Password is missing, is the sample password, or is shorter than 10 characters");
+    }
+
+    if (problems.Count > 0)
+        throw new InvalidOperationException(
+            "Staff credentials are not configured correctly: " + string.Join("; ", problems) + ". " +
+            "Set the environment variables Staff__Users__0__Username and Staff__Users__0__Password " +
+            "(double underscores, exact capitalisation) in your host's environment settings.");
+}
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
