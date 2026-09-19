@@ -1,0 +1,31 @@
+# Render Blueprint. Create it with: Dashboard -> New -> Blueprint -> pick your repo.
+services:
+  - type: web
+    name: atiat-hire
+    runtime: docker
+    plan: free            # demo: data resets on redeploy/spin-down. See the disk block below for persistence.
+    healthCheckPath: /healthz
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Staff__Users__0__Username
+        value: ops
+      - key: Staff__Users__0__Password
+        sync: false       # Render asks you for this value at creation time
+      - key: Staff__Users__0__DisplayName
+        value: Operations Desk
+      - key: WhatsApp__BusinessNumber
+        sync: false       # e.g. 2348012345678
+      - key: Seed__DemoData
+        value: "true"     # set to "false" for a real launch
+
+    # ---- Persistent SQLite (requires a paid plan): uncomment these, and change plan above to starter ----
+    # disk:
+    #   name: atiat-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+    # (and add these env vars)
+    #   - key: ConnectionStrings__Default
+    #     value: Data Source=/var/data/atiat-hire.db
+    #   - key: DataProtection__KeysPath
+    #     value: /var/data/keys

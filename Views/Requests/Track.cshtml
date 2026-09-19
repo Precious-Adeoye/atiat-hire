@@ -1,0 +1,26 @@
+@model TrackForm
+@{
+    ViewData["Title"] = "Track a request";
+}
+
+<div class="narrow">
+    <h1>Track a request</h1>
+    <p>Enter the reference number from your confirmation and the phone number you used.</p>
+
+    <form asp-action="Track" method="post" class="panel" novalidate>
+        <div asp-validation-summary="All" class="alert alert-error"></div>
+        <div class="grid">
+            <div>
+                <label asp-for="Reference"></label>
+                <input asp-for="Reference" placeholder="ATIAT-HR-00125" autocomplete="off" required />
+            </div>
+            <div>
+                <label asp-for="Phone"></label>
+                <input asp-for="Phone" type="tel" autocomplete="tel" required />
+            </div>
+            <div class="full">
+                <button type="submit" class="btn">Show status</button>
+            </div>
+        </div>
+    </form>
+</div>

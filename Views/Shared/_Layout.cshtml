@@ -1,0 +1,54 @@
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] is string pageTitle ? pageTitle + " - " : "")ATIAT Vehicle Hire</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index">ATIAT <small>Vehicle hire</small></a>
+            <nav aria-label="Main">
+                @if (signedIn)
+                {
+                    <a asp-controller="Dashboard" asp-action="Index">Requests</a>
+                    <a asp-controller="Fleet" asp-action="Index">Fleet</a>
+                    <a asp-controller="Analytics" asp-action="Index">Insights</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                        <button type="submit" class="link-btn">Sign out (@User.Identity!.Name)</button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Requests" asp-action="Create">Request a vehicle</a>
+                    <a asp-controller="Requests" asp-action="Track">Track a request</a>
+                    <a asp-controller="Account" asp-action="Login">Staff sign in</a>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            @if (TempData["Message"] is string message)
+            {
+                <div class="alert alert-success" role="status">@message</div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-error" role="alert">@error</div>
+            }
+        </div>
+        @RenderBody()
+    </main>
+
+    <footer>
+        <div class="container">ATIAT vehicle hire request and operations prototype. Times are shown in Lagos time (WAT).</div>
+    </footer>
+</body>
+</html>

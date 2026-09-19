@@ -1,0 +1,108 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Requests";
+}
+
+<div class="container">
+    <div class="page-head">
+        <h1>Vehicle hire requests</h1>
+        <a class="btn btn-secondary" asp-action="ExportCsv">Export all as CSV</a>
+    </div>
+
+    <div class="tiles">
+        @foreach (var s in Enum.GetValues<RequestStatus>())
+        {
+            var count = Model.StatusCounts.TryGetValue(s, out var c) ? c : 0;
+            <a class="tile @(Model.Status == s ? "active" : "")" asp-action="Index" asp-route-status="@s">
+                <b>@count</b>
+                <span>@s.Humanize()</span>
+            </a>
+        }
+    </div>
+
+    <form method="get" asp-action="Index" class="filters">
+        <div class="grow">
+            <label for="q">Search</label>
+            <input id="q" name="q" type="search" value="@Model.Q" placeholder="Reference, name, phone, email or place" />
+        </div>
+        <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All statuses</option>
+                @foreach (var s in Enum.GetValues<RequestStatus>())
+                {
+                    <option value="@s" selected="@(Model.Status == s)">@s.Humanize()</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="vehicleType">Vehicle</label>
+            <select id="vehicleType" name="vehicleType">
+                <option value="">All vehicle types</option>
+                @foreach (var t in Enum.GetValues<VehicleType>())
+                {
+                    <option value="@t" selected="@(Model.VehicleType == t)">@t.Humanize()</option>
+                }
+            </select>
+        </div>
+        <div class="btn-row">
+            <button type="submit" class="btn">Apply</button>
+            <a class="btn btn-secondary" asp-action="Index">Clear</a>
+        </div>
+    </form>
+
+    @if (Model.Requests.Count == 0)
+    {
+        <div class="panel">
+            <p>No requests match these filters. Clear the filters to see everything, or check back when the next request arrives.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Customer</th>
+                        <th>Trip</th>
+                        <th>Vehicle</th>
+                        <th>Status</th>
+                        <th>Received</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Requests)
+                    {
+                        var hasWarning = Model.Warnings.TryGetValue(r.Id, out var warnings);
+                        var tip = hasWarning ? string.Join(" ", warnings!) : string.Empty;
+                        <tr>
+                            <td class="nowrap"><a class="plate plate-sm" asp-action="Details" asp-route-id="@r.Id">@r.ReferenceNumber</a></td>
+                            <td>@r.CustomerName<div class="muted small">@r.Phone</div></td>
+                            <td>
+                                @r.PickupLocation to @r.Destination
+                                <div class="muted small">@r.PickupDateTime.ToString("ddd d MMM, HH:mm"), @r.DurationHours h, @r.Passengers passengers</div>
+                            </td>
+                            <td>
+                                @r.PreferredVehicleType.Humanize()
+                                @if (r.AssignedVehicle is not null)
+                                {
+                                    <div class="muted small">@r.AssignedVehicle.Name</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge badge-@r.Status.ToCssClass()">@r.Status.Humanize()</span>
+                                @if (hasWarning)
+                                {
+                                    <div><span class="flag" title="@tip">Check schedule</span></div>
+                                }
+                            </td>
+                            <td class="nowrap small">@r.CreatedAt.ToLagosDisplay()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="small muted" style="margin-top:.75rem">Showing the latest @Model.Requests.Count requests that match (up to 200).</p>
+    }
+</div>

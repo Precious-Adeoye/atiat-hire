@@ -1,0 +1,31 @@
+@model ConfirmationViewModel
+@{
+    ViewData["Title"] = "Request received";
+    var r = Model.Request;
+}
+
+<div class="narrow">
+    <h1>We have your request.</h1>
+    <p>Keep this reference number. Quote it when you talk to us and use it to track your request.</p>
+    <p><span class="plate">@r.ReferenceNumber</span></p>
+
+    <div class="btn-row" style="margin-bottom:1.5rem">
+        <a class="btn" href="@Model.WhatsAppUrl" target="_blank" rel="noopener">Continue on WhatsApp</a>
+        <a class="btn btn-secondary" asp-action="Track">Track this request</a>
+    </div>
+
+    <section class="panel">
+        <h2>What you sent</h2>
+        <dl class="facts">
+            <dt>Name</dt><dd>@r.CustomerName</dd>
+            <dt>Pickup</dt><dd>@r.PickupLocation</dd>
+            <dt>Destination</dt><dd>@r.Destination</dd>
+            <dt>Date and time</dt><dd>@r.PickupDateTime.ToString("dddd d MMMM yyyy, HH:mm")</dd>
+            <dt>Duration</dt><dd>@r.DurationHours hours</dd>
+            <dt>Passengers</dt><dd>@r.Passengers</dd>
+            <dt>Vehicle</dt><dd>@r.PreferredVehicleType.Humanize(), @r.DriverRequirement.Humanize().ToLowerInvariant()</dd>
+        </dl>
+    </section>
+
+    <p class="muted small" style="margin-top:1rem">We will contact you on @r.Phone or @r.Email with a quote.</p>
+</div>

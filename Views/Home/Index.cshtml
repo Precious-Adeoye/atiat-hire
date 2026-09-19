@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Request a vehicle";
+}
+
+<div class="container">
+    <section class="hero">
+        <div>
+            <h1>Request a vehicle, then follow it by reference number.</h1>
+            <p>Tell us where you are going, when, and how many people are travelling. Our team replies with a quote, and you can keep talking to us on WhatsApp as usual. Your request number ties both together.</p>
+            <div class="btn-row">
+                <a class="btn" asp-controller="Requests" asp-action="Create">Request a vehicle</a>
+                <a class="btn btn-secondary" asp-controller="Requests" asp-action="Track">Track a request</a>
+            </div>
+        </div>
+        <div class="hero-side">
+            <p class="small muted">Every request gets its own reference:</p>
+            <span class="plate">ATIAT-HR-00125</span>
+            <p class="small muted">Its status moves through:</p>
+            <div class="stages">
+                <span class="badge badge-pending">Pending</span>
+                <span class="badge badge-reviewed">Reviewed</span>
+                <span class="badge badge-quoted">Quoted</span>
+                <span class="badge badge-confirmed">Confirmed</span>
+                <span class="badge badge-completed">Completed</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="route" aria-label="How it works">
+        <div>
+            <h3>Send the details once</h3>
+            <p>Pickup, destination, date, duration, passengers and vehicle type, all in one short form.</p>
+        </div>
+        <div>
+            <h3>Continue on WhatsApp</h3>
+            <p>After you submit, one tap opens a WhatsApp chat that already quotes your reference number.</p>
+        </div>
+        <div>
+            <h3>Check progress any time</h3>
+            <p>Enter your reference number and phone number to see where your request stands.</p>
+        </div>
+    </section>
+</div>

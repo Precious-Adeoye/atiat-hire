@@ -1,0 +1,24 @@
+@model BarListViewModel
+
+<section class="panel">
+    <h2>@Model.Title</h2>
+    @if (Model.Items.Count == 0 || Model.Items.All(i => i.Count == 0))
+    {
+        <p class="muted">@Model.EmptyText</p>
+    }
+    else
+    {
+        var max = Math.Max(1, Model.Items.Max(i => i.Count));
+        <ul class="bars">
+            @foreach (var item in Model.Items)
+            {
+                var pct = (int)Math.Round(100.0 * item.Count / max);
+                <li>
+                    <span>@item.Label</span>
+                    <span class="track"><span class="fill" style="width:@(pct)%"></span></span>
+                    <span class="n">@item.Count</span>
+                </li>
+            }
+        </ul>
+    }
+</section>

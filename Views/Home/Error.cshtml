@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+
+<div class="narrow">
+    <h1>Something went wrong</h1>
+    <p>The page could not be loaded. Try again, or go back to the <a asp-controller="Home" asp-action="Index">home page</a>.</p>
+    @if (ViewData["RequestId"] is string requestId)
+    {
+        <p class="small muted">Support reference: @requestId</p>
+    }
+</div>

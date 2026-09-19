@@ -1,0 +1,48 @@
+@model TrackResultViewModel
+@{
+    ViewData["Title"] = Model.Request.ReferenceNumber;
+    var r = Model.Request;
+    // Customers see status changes only. Internal notes and vehicle assignments stay private.
+    var steps = r.History.Where(h => h.FromStatus != h.ToStatus).OrderBy(h => h.ChangedAt).ThenBy(h => h.Id).ToList();
+}
+
+<div class="narrow">
+    <p class="small"><a asp-action="Track">Track another request</a></p>
+    <h1>@RequestWorkflow.Describe(r.Status)</h1>
+    <p><span class="plate">@r.ReferenceNumber</span></p>
+    <p><span class="badge badge-@r.Status.ToCssClass()">@r.Status.Humanize()</span></p>
+
+    @if (r.QuotedAmount.HasValue && (r.Status == RequestStatus.Quoted || r.Status == RequestStatus.Confirmed))
+    {
+        <div class="alert alert-success">Quoted amount: <b>&#8358;@r.QuotedAmount.Value.ToString("N0")</b></div>
+    }
+
+    <div class="btn-row" style="margin-bottom:1.5rem">
+        <a class="btn" href="@Model.WhatsAppUrl" target="_blank" rel="noopener">Continue on WhatsApp</a>
+    </div>
+
+    <div class="panel">
+        <h2>Progress</h2>
+        <ol class="timeline">
+            @foreach (var s in steps)
+            {
+                <li>
+                    <b>@s.ToStatus.Humanize()</b>
+                    <div class="small muted">@s.ChangedAt.ToLagosDisplay()</div>
+                </li>
+            }
+        </ol>
+    </div>
+
+    <section class="panel">
+        <h2>Trip details</h2>
+        <dl class="facts">
+            <dt>Pickup</dt><dd>@r.PickupLocation</dd>
+            <dt>Destination</dt><dd>@r.Destination</dd>
+            <dt>Date and time</dt><dd>@r.PickupDateTime.ToString("dddd d MMMM yyyy, HH:mm")</dd>
+            <dt>Duration</dt><dd>@r.DurationHours hours</dd>
+            <dt>Passengers</dt><dd>@r.Passengers</dd>
+            <dt>Vehicle</dt><dd>@r.PreferredVehicleType.Humanize(), @r.DriverRequirement.Humanize().ToLowerInvariant()</dd>
+        </dl>
+    </section>
+</div>

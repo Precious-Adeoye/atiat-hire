@@ -1,0 +1,156 @@
+@model RequestDetailsViewModel
+@{
+    var r = Model.Request;
+    ViewData["Title"] = r.ReferenceNumber;
+    var isOpen = RequestWorkflow.IsOpen(r.Status);
+    var history = r.History.OrderBy(h => h.ChangedAt).ThenBy(h => h.Id).ToList();
+}
+
+<div class="container">
+    <p class="small"><a asp-action="Index">All requests</a></p>
+
+    <div class="page-head">
+        <span class="plate">@r.ReferenceNumber</span>
+        <span class="badge badge-@r.Status.ToCssClass()">@r.Status.Humanize()</span>
+    </div>
+
+    @if (Model.Warnings.Count > 0)
+    {
+        <div class="alert alert-warn" role="status">
+            <b>Potential scheduling conflict</b>
+            <ul>
+                @foreach (var w in Model.Warnings)
+                {
+                    <li>@w</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="detail">
+        <div>
+            <section class="panel">
+                <h2>Trip</h2>
+                <dl class="facts">
+                    <dt>Pickup</dt><dd>@r.PickupLocation</dd>
+                    <dt>Destination</dt><dd>@r.Destination</dd>
+                    <dt>Starts</dt><dd>@r.PickupDateTime.ToString("ddd d MMM yyyy, HH:mm")</dd>
+                    <dt>Ends (estimated)</dt><dd>@r.PickupEndDateTime.ToString("ddd d MMM yyyy, HH:mm")</dd>
+                    <dt>Duration</dt><dd>@r.DurationHours hours</dd>
+                    <dt>Passengers</dt><dd>@r.Passengers</dd>
+                    <dt>Vehicle preference</dt><dd>@r.PreferredVehicleType.Humanize()</dd>
+                    <dt>Driver</dt><dd>@r.DriverRequirement.Humanize()</dd>
+                    <dt>Purpose</dt><dd>@r.Purpose.Humanize()</dd>
+                    <dt>Additional information</dt><dd>@(string.IsNullOrWhiteSpace(r.AdditionalInformation) ? "None" : r.AdditionalInformation)</dd>
+                    @if (r.QuotedAmount.HasValue)
+                    {
+                        <dt>Quoted amount</dt>
+                        <dd>&#8358;@r.QuotedAmount.Value.ToString("N2")</dd>
+                    }
+                </dl>
+            </section>
+
+            <section class="panel">
+                <h2>Customer</h2>
+                <dl class="facts">
+                    <dt>Name</dt><dd>@r.CustomerName</dd>
+                    <dt>Phone</dt><dd><a href="tel:@r.Phone">@r.Phone</a></dd>
+                    <dt>Email</dt><dd><a href="mailto:@r.Email">@r.Email</a></dd>
+                    <dt>Received</dt><dd>@r.CreatedAt.ToLagosDisplay()</dd>
+                    <dt>First response</dt><dd>@(r.FirstRespondedAt.HasValue ? r.FirstRespondedAt.ToLagosDisplay() : "Not yet")</dd>
+                </dl>
+                <div class="btn-row" style="margin-top:1rem">
+                    <a class="btn btn-secondary btn-small" href="@Model.CustomerWhatsAppUrl" target="_blank" rel="noopener">Message on WhatsApp</a>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Internal notes</h2>
+                <form asp-action="SaveNotes" asp-route-id="@r.Id" method="post">
+                    <label for="notes" class="hint">Only staff can see these notes.</label>
+                    <textarea id="notes" name="notes" maxlength="2000">@r.StaffNotes</textarea>
+                    <div style="margin-top:.75rem"><button type="submit" class="btn btn-secondary btn-small">Save notes</button></div>
+                </form>
+            </section>
+        </div>
+
+        <div>
+            @if (Model.NextStatuses.Count > 0)
+            {
+                <section class="panel">
+                    <h2>Update status</h2>
+                    <form asp-action="UpdateStatus" asp-route-id="@r.Id" method="post">
+                        @if (Model.NextStatuses.Contains(RequestStatus.Quoted))
+                        {
+                            <label for="quotedAmount">Quoted amount (&#8358;)</label>
+                            <input id="quotedAmount" name="quotedAmount" type="number" min="0" step="0.01" value="@(r.QuotedAmount?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" />
+                            <p class="hint">Saved when you mark the request as quoted.</p>
+                        }
+                        @if (Model.NextStatuses.Contains(RequestStatus.Confirmed) && r.AssignedVehicleId is null)
+                        {
+                            <p class="hint">No vehicle is assigned yet. Assign one below before confirming.</p>
+                        }
+                        <label for="note">Note for the history (optional)</label>
+                        <textarea id="note" name="note" maxlength="500" style="min-height:4rem"></textarea>
+                        <div class="btn-row" style="margin-top:.75rem">
+                            @foreach (var next in Model.NextStatuses)
+                            {
+                                if (next == RequestStatus.Cancelled)
+                                {
+                                    <button type="submit" name="newStatus" value="@next" class="btn btn-danger">Cancel request</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" name="newStatus" value="@next" class="btn">Mark as @next.Humanize().ToLowerInvariant()</button>
+                                }
+                            }
+                        </div>
+                    </form>
+                </section>
+            }
+
+            @if (isOpen)
+            {
+                <section class="panel">
+                    <h2>Vehicle</h2>
+                    <form asp-action="AssignVehicle" asp-route-id="@r.Id" method="post">
+                        <label for="vehicleId">Assigned vehicle</label>
+                        <select id="vehicleId" name="vehicleId">
+                            <option value="">Not assigned</option>
+                            @foreach (var v in Model.Vehicles)
+                            {
+                                <option value="@v.Id" selected="@(r.AssignedVehicleId == v.Id)">@v.Name (@v.Type.Humanize(), @v.Capacity seats, @v.Status.Humanize().ToLowerInvariant())</option>
+                            }
+                        </select>
+                        <div style="margin-top:.75rem"><button type="submit" class="btn btn-secondary btn-small">Save vehicle</button></div>
+                    </form>
+                </section>
+            }
+            else if (r.AssignedVehicle is not null)
+            {
+                <section class="panel">
+                    <h2>Vehicle</h2>
+                    <p>@r.AssignedVehicle.Name (@r.AssignedVehicle.PlateNumber)</p>
+                </section>
+            }
+
+            <section class="panel">
+                <h2>History</h2>
+                <ol class="timeline">
+                    @foreach (var h in history)
+                    {
+                        var isUpdate = h.FromStatus == h.ToStatus;
+                        <li class="@(isUpdate ? "minor" : "")">
+                            <b>@(isUpdate ? "Update" : h.ToStatus.Humanize())</b>
+                            <div class="small muted">@h.ChangedAt.ToLagosDisplay(), @h.ChangedBy</div>
+                            @if (!string.IsNullOrWhiteSpace(h.Note))
+                            {
+                                <div>@h.Note</div>
+                            }
+                        </li>
+                    }
+                </ol>
+            </section>
+        </div>
+    </div>
+</div>

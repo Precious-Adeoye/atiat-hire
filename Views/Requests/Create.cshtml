@@ -1,0 +1,97 @@
+@model HireRequestForm
+@{
+    ViewData["Title"] = "Request a vehicle";
+}
+
+<div class="narrow">
+    <h1>Request a vehicle</h1>
+    <p>Fill in the trip details and we will reply with a quote. You will get a reference number straight away.</p>
+
+    <form asp-action="Create" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-error"></div>
+
+        <div class="hp" aria-hidden="true">
+            <label for="Website">Leave this field empty</label>
+            <input asp-for="Website" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <fieldset>
+            <legend>About you</legend>
+            <div class="grid">
+                <div class="full">
+                    <label asp-for="CustomerName"></label>
+                    <input asp-for="CustomerName" autocomplete="name" required />
+                    <span asp-validation-for="CustomerName"></span>
+                </div>
+                <div>
+                    <label asp-for="Phone"></label>
+                    <input asp-for="Phone" type="tel" autocomplete="tel" required />
+                    <span asp-validation-for="Phone"></span>
+                </div>
+                <div>
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" type="email" autocomplete="email" required />
+                    <span asp-validation-for="Email"></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Your trip</legend>
+            <div class="grid">
+                <div>
+                    <label asp-for="PickupLocation"></label>
+                    <input asp-for="PickupLocation" required />
+                    <span asp-validation-for="PickupLocation"></span>
+                </div>
+                <div>
+                    <label asp-for="Destination"></label>
+                    <input asp-for="Destination" required />
+                    <span asp-validation-for="Destination"></span>
+                </div>
+                <div>
+                    <label asp-for="PickupDateTime"></label>
+                    <input asp-for="PickupDateTime" type="datetime-local" required />
+                    <span asp-validation-for="PickupDateTime"></span>
+                </div>
+                <div>
+                    <label asp-for="DurationHours"></label>
+                    <input asp-for="DurationHours" type="number" min="1" max="720" required />
+                    <span class="hint">24 hours is one day.</span>
+                    <span asp-validation-for="DurationHours"></span>
+                </div>
+                <div>
+                    <label asp-for="Passengers"></label>
+                    <input asp-for="Passengers" type="number" min="1" max="60" required />
+                    <span asp-validation-for="Passengers"></span>
+                </div>
+                <div>
+                    <label asp-for="Purpose"></label>
+                    <select asp-for="Purpose" asp-items="Html.GetEnumSelectList<TripPurpose>()"></select>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Vehicle</legend>
+            <div class="grid">
+                <div>
+                    <label asp-for="PreferredVehicleType"></label>
+                    <select asp-for="PreferredVehicleType" asp-items="Html.GetEnumSelectList<VehicleType>()"></select>
+                </div>
+                <div>
+                    <label asp-for="DriverRequirement"></label>
+                    <select asp-for="DriverRequirement" asp-items="Html.GetEnumSelectList<DriverRequirement>()"></select>
+                </div>
+                <div class="full">
+                    <label asp-for="AdditionalInformation"></label>
+                    <textarea asp-for="AdditionalInformation" maxlength="1000"></textarea>
+                    <span class="hint">Flight number, luggage, child seat, multiple stops or anything else we should know.</span>
+                    <span asp-validation-for="AdditionalInformation"></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <button type="submit" class="btn">Send request</button>
+    </form>
+</div>

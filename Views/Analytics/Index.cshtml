@@ -1,0 +1,60 @@
+@model AnalyticsViewModel
+@{
+    ViewData["Title"] = "Insights";
+    var ranges = new[] { (Days: 30, Label: "30 days"), (Days: 90, Label: "90 days"), (Days: 365, Label: "12 months"), (Days: 0, Label: "All time") };
+}
+
+<div class="container">
+    <div class="page-head">
+        <h1>Demand and performance</h1>
+        <div class="seg" role="group" aria-label="Time range">
+            @foreach (var range in ranges)
+            {
+                <a asp-action="Index" asp-route-days="@range.Days" class="@(Model.Days == range.Days ? "active" : "")" aria-current="@(Model.Days == range.Days ? "true" : null)">@range.Label</a>
+            }
+        </div>
+    </div>
+
+    @if (Model.Total == 0)
+    {
+        <div class="panel">
+            <p>No requests were received in this period, so there is nothing to analyse yet. Choose a longer range, or wait for new requests to arrive.</p>
+        </div>
+    }
+    else
+    {
+        <div class="kpis">
+            <div class="tile"><b>@Model.Total</b><span>Requests received</span></div>
+            <div class="tile"><b>@Model.Open</b><span>Still open</span></div>
+            <div class="tile"><b>@Model.Completed</b><span>Completed hires</span></div>
+            <div class="tile"><b>@Model.Cancelled</b><span>Cancelled</span></div>
+            <div class="tile">
+                <b>@(Model.AverageResponseHours.HasValue ? AnalyticsService.FormatDuration(Model.AverageResponseHours.Value) : "-")</b>
+                <span>Average first response</span>
+            </div>
+        </div>
+
+        @if (Model.Insights.Count > 0)
+        {
+            <section class="panel">
+                <h2>What the data says</h2>
+                <ul class="insights">
+                    @foreach (var insight in Model.Insights)
+                    {
+                        <li>@insight</li>
+                    }
+                </ul>
+            </section>
+        }
+
+        <div class="charts">
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Requests received per month", Model.PerMonth))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Most requested vehicle types", Model.VehicleTypes))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Most common pickup locations", Model.TopPickups))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Most requested destinations", Model.TopDestinations))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Pickup day of the week", Model.PickupWeekdays))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Purpose of trip", Model.Purposes))
+            @await Html.PartialAsync("_BarList", new BarListViewModel("Requests by status", Model.Statuses))
+        </div>
+    }
+</div>

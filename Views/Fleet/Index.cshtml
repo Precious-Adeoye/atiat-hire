@@ -1,0 +1,103 @@
+@model FleetViewModel
+@{
+    ViewData["Title"] = "Fleet";
+}
+
+<div class="container">
+    <div class="page-head">
+        <h1>Fleet availability</h1>
+    </div>
+    <p class="muted">Set each vehicle's status by hand. The next hire shows quoted or confirmed requests that already have this vehicle assigned.</p>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Plate</th>
+                    <th>Type</th>
+                    <th>Seats</th>
+                    <th>Status</th>
+                    <th>Next hire</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    var v = row.Vehicle;
+                    <tr>
+                        <td>
+                            @v.Name
+                            @if (!string.IsNullOrWhiteSpace(v.Notes))
+                            {
+                                <div class="muted small">@v.Notes</div>
+                            }
+                        </td>
+                        <td class="nowrap">@v.PlateNumber</td>
+                        <td>@v.Type.Humanize()</td>
+                        <td>@v.Capacity</td>
+                        <td>
+                            <form asp-action="SetStatus" method="post" class="btn-row">
+                                <input type="hidden" name="id" value="@v.Id" />
+                                <span class="badge badge-@v.Status.ToCssClass()">@v.Status.Humanize()</span>
+                                <select name="status" aria-label="Change status for @v.Name" style="width:auto">
+                                    @foreach (var s in Enum.GetValues<VehicleStatus>())
+                                    {
+                                        <option value="@s" selected="@(v.Status == s)">@s.Humanize()</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-secondary btn-small">Update</button>
+                            </form>
+                        </td>
+                        <td>
+                            @if (row.NextHire is { } next)
+                            {
+                                <a asp-controller="Dashboard" asp-action="Details" asp-route-id="@next.Id">@next.ReferenceNumber</a>
+                                <div class="muted small">@next.PickupDateTime.ToString("ddd d MMM, HH:mm") to @next.PickupEndDateTime.ToString("ddd d MMM, HH:mm")</div>
+                            }
+                            else
+                            {
+                                <span class="muted">Nothing assigned</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="panel" style="margin-top:1.5rem">
+        <h2>Add a vehicle</h2>
+        <form asp-action="Add" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-error"></div>
+            <div class="grid">
+                <div>
+                    <label asp-for="NewVehicle.Name">Vehicle name</label>
+                    <input asp-for="NewVehicle.Name" placeholder="Toyota Prado" required />
+                    <span asp-validation-for="NewVehicle.Name"></span>
+                </div>
+                <div>
+                    <label asp-for="NewVehicle.PlateNumber"></label>
+                    <input asp-for="NewVehicle.PlateNumber" required />
+                    <span asp-validation-for="NewVehicle.PlateNumber"></span>
+                </div>
+                <div>
+                    <label asp-for="NewVehicle.Type">Type</label>
+                    <select asp-for="NewVehicle.Type" asp-items="Html.GetEnumSelectList<VehicleType>()"></select>
+                </div>
+                <div>
+                    <label asp-for="NewVehicle.Capacity"></label>
+                    <input asp-for="NewVehicle.Capacity" type="number" min="1" max="70" required />
+                    <span asp-validation-for="NewVehicle.Capacity"></span>
+                </div>
+                <div class="full">
+                    <label asp-for="NewVehicle.Notes">Notes</label>
+                    <input asp-for="NewVehicle.Notes" />
+                </div>
+                <div class="full">
+                    <button type="submit" class="btn">Add vehicle</button>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
